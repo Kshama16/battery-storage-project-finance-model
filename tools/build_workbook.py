@@ -660,9 +660,11 @@ ln.add_data(Reference(annual, min_col=FIRST, max_col=LAST_Y, min_row=YR["ebitda"
 ln.series[0].tx = SeriesLabel(v="EBITDA (CFADS)")
 ln.series[0].graphicalProperties.line.solidFill = TEAL
 ln.series[0].graphicalProperties.line.width = 28000
+ln.series[0].smooth = False  # openpyxl smooths by default, which invents wiggles between annual points
 ch += ln
 ch.set_categories(cats)
 ch.x_axis.number_format = "0"
+ch.x_axis.tickLblSkip = 3
 ch.legend.position = "b"
 summary.add_chart(ch, "B30")
 
@@ -673,8 +675,13 @@ for key, label, color in [("sr_bal", "Senior balance", NAVY), ("mz_bal", "Mezz b
     ch2.add_data(Reference(annual, min_col=FIRST, max_col=LAST_Y, min_row=YR[key]), from_rows=True, titles_from_data=False)
     ch2.series[-1].tx = SeriesLabel(v=label)
     ch2.series[-1].graphicalProperties.line.solidFill = color
+    ch2.series[-1].smooth = False
 ch2.set_categories(cats)
 ch2.legend.position = "b"
+ch2.x_axis.tickLblSkip = 3
+for chart in (ch, ln, ch2):  # openpyxl 3.1 marks axes as deleted unless told otherwise
+    chart.x_axis.delete = False
+    chart.y_axis.delete = False
 summary.add_chart(ch2, "B46")
 
 # =====================================================================
@@ -908,6 +915,12 @@ for i, (k_, v) in enumerate(rows):
 
 for ws in wb.worksheets:
     ws.sheet_view.zoomScale = 90
+# Summary prints on one landscape page
+summary.page_setup.orientation = "landscape"
+summary.sheet_properties.pageSetUpPr.fitToPage = True
+summary.page_setup.fitToWidth = 1
+summary.page_setup.fitToHeight = 1
+summary.print_area = "A1:J62"
 wb.calculation.fullCalcOnLoad = True
 wb.calculation.calcMode = "auto"
 OUT.parent.mkdir(exist_ok=True)
